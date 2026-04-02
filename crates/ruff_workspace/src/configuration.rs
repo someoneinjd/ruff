@@ -183,6 +183,9 @@ impl Configuration {
             exclude: FilePatternSet::try_from_iter(format.exclude.unwrap_or_default())?,
             extension: self.extension.clone().unwrap_or_default(),
             preview: format_preview,
+            f_string_conversion_on_type: format
+                .f_string_conversion_on_type
+                .unwrap_or(format_defaults.f_string_conversion_on_type),
             unresolved_target_version: target_version,
             per_file_target_version: per_file_target_version.clone(),
             line_width: self
@@ -1251,6 +1254,7 @@ pub struct FormatConfiguration {
     pub exclude: Option<Vec<FilePattern>>,
     pub preview: Option<PreviewMode>,
     pub extension: Option<ExtensionMapping>,
+    pub f_string_conversion_on_type: Option<bool>,
 
     pub indent_style: Option<IndentStyle>,
     pub quote_style: Option<QuoteStyle>,
@@ -1277,6 +1281,7 @@ impl FormatConfiguration {
                     .collect()
             }),
             preview: options.preview.map(PreviewMode::from),
+            f_string_conversion_on_type: options.f_string_conversion_on_type,
             indent_style: options.indent_style,
             quote_style: options.quote_style,
             nested_string_quote_style: options.nested_string_quote_style,
@@ -1305,6 +1310,9 @@ impl FormatConfiguration {
             exclude: self.exclude.or(config.exclude),
             preview: self.preview.or(config.preview),
             extension: self.extension.or(config.extension),
+            f_string_conversion_on_type: self
+                .f_string_conversion_on_type
+                .or(config.f_string_conversion_on_type),
             indent_style: self.indent_style.or(config.indent_style),
             quote_style: self.quote_style.or(config.quote_style),
             nested_string_quote_style: self

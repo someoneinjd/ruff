@@ -3764,6 +3764,18 @@ pub struct FormatOptions {
     )]
     pub preview: Option<bool>,
 
+    /// Whether to allow the LSP server to convert regular string literals to
+    /// f-strings when `{` is typed inside the string via on-type formatting.
+    #[option(
+        default = "false",
+        value_type = "bool",
+        example = r#"
+            # Allow typing `{` inside a normal string to promote it to an f-string.
+            f-string-conversion-on-type = true
+        "#
+    )]
+    pub f_string_conversion_on_type: Option<bool>,
+
     /// Whether to use spaces or tabs for indentation.
     ///
     /// `indent-style = "space"` (default):

@@ -172,6 +172,7 @@ pub struct FormatterSettings {
     pub exclude: FilePatternSet,
     pub extension: ExtensionMapping,
     pub preview: PreviewMode,
+    pub f_string_conversion_on_type: bool,
     /// The non-path-resolved Python version specified by the `target-version` input option.
     ///
     /// See [`FormatterSettings::resolve_target_version`] for a way to obtain the Python version for
@@ -268,6 +269,7 @@ impl Default for FormatterSettings {
             unresolved_target_version: default_options.target_version(),
             per_file_target_version: CompiledPerFileTargetVersionList::default(),
             preview: PreviewMode::Disabled,
+            f_string_conversion_on_type: false,
             line_width: default_options.line_width(),
             line_ending: LineEnding::Auto,
             indent_style: default_options.indent_style(),
@@ -292,6 +294,7 @@ impl fmt::Display for FormatterSettings {
                 self.unresolved_target_version,
                 self.per_file_target_version,
                 self.preview,
+                self.f_string_conversion_on_type,
                 self.line_width,
                 self.line_ending,
                 self.indent_style,

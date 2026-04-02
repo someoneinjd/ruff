@@ -172,6 +172,13 @@ impl Server {
             }),
             document_formatting_provider: Some(OneOf::Left(true)),
             document_range_formatting_provider: Some(OneOf::Left(true)),
+            // This capability is advertised statically because file-based configuration is
+            // resolved per document after initialization. The request handler checks the
+            // formatter setting and returns no edits unless the feature is enabled.
+            document_on_type_formatting_provider: Some(types::DocumentOnTypeFormattingOptions {
+                first_trigger_character: "{".to_string(),
+                more_trigger_character: None,
+            }),
             diagnostic_provider: Some(types::DiagnosticServerCapabilities::Options(
                 DiagnosticOptions {
                     identifier: Some(crate::DIAGNOSTIC_NAME.into()),

@@ -273,6 +273,7 @@ formatter.exclude = []
 formatter.unresolved_target_version = 3.11
 formatter.per_file_target_version = {}
 formatter.preview = disabled
+formatter.f_string_conversion_on_type = false
 formatter.line_width = 88
 formatter.line_ending = auto
 formatter.indent_style = space

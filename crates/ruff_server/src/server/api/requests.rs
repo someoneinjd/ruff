@@ -5,6 +5,7 @@ mod execute_command;
 mod format;
 mod format_range;
 mod hover;
+mod on_type_format;
 mod shutdown;
 
 use super::{
@@ -18,6 +19,7 @@ pub(super) use execute_command::ExecuteCommand;
 pub(super) use format::Format;
 pub(super) use format_range::FormatRange;
 pub(super) use hover::Hover;
+pub(super) use on_type_format::FormatOnType;
 pub(super) use shutdown::ShutdownHandler;
 
 type FormatResponse = Option<Vec<lsp_types::TextEdit>>;
