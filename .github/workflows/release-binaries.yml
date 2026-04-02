@@ -1,0 +1,116 @@
+name: Release fork binaries
+
+on:
+  push:
+    tags:
+      - "fork-v*"
+
+env:
+  BIN_NAME: ruff
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x86_64
+            os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            archive_suffix: tar.gz
+            binary_name: ruff
+          - name: macos-aarch64
+            os: macos-14
+            target: aarch64-apple-darwin
+            archive_suffix: tar.gz
+            binary_name: ruff
+          - name: windows-x86_64
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+            archive_suffix: zip
+            binary_name: ruff.exe
+
+    runs-on: ${{ matrix.os }}
+    env:
+      TARGET: ${{ matrix.target }}
+      TAG_NAME: ${{ github.ref_name }}
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Install Rust toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
+          rustup target add "$TARGET"
+
+      - name: Build ruff
+        shell: bash
+        run: cargo build --release --locked --bin ruff --target "$TARGET"
+
+      - name: Package binary (unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          archive_root="ruff-${TAG_NAME}-${TARGET}"
+          mkdir -p dist "$archive_root"
+          cp "target/${TARGET}/release/${{ matrix.binary_name }}" "$archive_root/ruff"
+          tar czf "dist/${archive_root}.tar.gz" "$archive_root"
+
+      - name: Package binary (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $archiveRoot = "ruff-${env:TAG_NAME}-${env:TARGET}"
+          New-Item -ItemType Directory -Force dist | Out-Null
+          New-Item -ItemType Directory -Force $archiveRoot | Out-Null
+          Copy-Item "target/${env:TARGET}/release/${{ matrix.binary_name }}" "$archiveRoot/ruff.exe"
+          Compress-Archive -Path $archiveRoot -DestinationPath "dist/${archiveRoot}.zip"
+
+      - name: Upload packaged binary
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: release-${{ matrix.name }}
+          path: dist/*
+
+  release:
+    name: Publish GitHub release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      TAG_NAME: ${{ github.ref_name }}
+    steps:
+      - name: Download packaged binaries
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+
+      - name: Create or update GitHub release
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tag="$TAG_NAME"
+          title="Ruff fork ${tag}"
+
+          if ! gh release view "$tag" --repo "$GH_REPO" >/dev/null 2>&1; then
+            gh release create "$tag" --title "$title" --notes "Fork binary build for ${tag}."
+          fi
+
+          gh release upload "$tag" dist/* --clobber --repo "$GH_REPO"
